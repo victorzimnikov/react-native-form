@@ -1,0 +1,13 @@
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "noEmit": false,
+    "lib": ["es2018"],
+    "jsx": "react-native",
+    "moduleResolution": "node",
+    "module": "esnext",
+    "target": "es2019",
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": ["node_modules", "babel.config.js"]
+}
