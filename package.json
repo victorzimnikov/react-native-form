@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "React Native form",
   "main": "index.js",
+  "private": true,
   "repository": "https://github.com/victorzimnikov/react-native-form.git",
   "author": "Victor Zimnikov <victor.zimnikov@yandex.ru>",
   "license": "MIT",
