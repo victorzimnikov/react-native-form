@@ -1,5 +1,5 @@
 import { update } from "immupdate";
-import { assign, isEqual } from "lodash";
+import { assign, isEmpty, isEqual } from "lodash";
 import { useEffect, useMemo, useReducer } from "react";
 
 interface Dict<T> {
@@ -7,10 +7,11 @@ interface Dict<T> {
 }
 
 enum Actions {
-  Blur = "form/Blur",
-  Reset = "form/Reset",
-  Change = "form/Change",
-  SetError = "form/SetError",
+  Blur = "Form/Blur",
+  Reset = "Form/Reset",
+  Change = "Form/Change",
+  SetError = "Form/SetError",
+  ClearErrors = "Form/ClearErrors",
 }
 
 export interface ActionProps {
@@ -79,6 +80,9 @@ function reducerWrapper(
     }
 
     switch (type) {
+      case Actions.ClearErrors:
+        return update(state, { errors: {} });
+
       case Actions.Reset:
         return update(state, getInitialState(fields, initialValues));
 
@@ -137,8 +141,12 @@ export function useForm<V = {}, E = Error>({
   }, [state.values]);
 
   useEffect(() => {
-    if (error && formatError) {
+    if (formatError) {
       const errors: FormErrorProps[] = formatError(error);
+
+      if (isEmpty(errors)) {
+        dispatch({ type: Actions.ClearErrors });
+      }
 
       errors.forEach(({ field, errorText }) => {
         if (errorText && errorText !== "") {
