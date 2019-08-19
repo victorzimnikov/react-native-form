@@ -13,18 +13,18 @@ enum Actions {
   SetError = "form/SetError",
 }
 
-interface ActionProps {
+export interface ActionProps {
   readonly value?: any;
   readonly type: Actions;
   readonly field?: string;
 }
 
-interface FormErrorProps {
+export interface FormErrorProps {
   readonly field: string;
   readonly errorText: string;
 }
 
-interface InputFormProps<V, E> {
+export interface InputFormProps<V, E> {
   readonly error?: E;
   readonly fields: string[];
   readonly initialValues?: Partial<V>;
@@ -34,7 +34,7 @@ interface InputFormProps<V, E> {
   readonly formatError?: (error: E) => FormErrorProps[];
 }
 
-interface FormStateProps<V> {
+export interface FormStateProps<V> {
   readonly values: V;
   readonly valid: boolean;
   readonly pristine: boolean;

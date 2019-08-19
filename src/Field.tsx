@@ -2,7 +2,7 @@ import React, { ReactElement } from "react";
 
 import { FormProps } from "./useForm";
 
-interface Props {
+export interface Props {
   readonly name: string;
   readonly form: FormProps<any>;
   readonly component: ReactElement<any>;
