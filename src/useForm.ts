@@ -94,8 +94,10 @@ function reducerWrapper(
         const values = update(state.values, { [field]: value });
         const pristine = isEqual(values, initialValues);
         const errors = update(state.errors, { [field]: "" });
+        const valid = Object.values(errors).filter(x => Boolean(x)).length === 0;
 
         return update(state, {
+          valid,
           errors,
           values,
           pristine,
