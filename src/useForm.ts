@@ -97,16 +97,16 @@ function reducerWrapper(
         const pristine = isEqual(values, initialValues);
         const errors = update(state.errors, { [field]: "" });
 
-        const hasErrors = Object.values(errors).filter(x => Boolean(x)).length === 0;
+        const hasErrors = Object.values(errors).filter(x => Boolean(x)).length > 0;
         const filledRequired =
-          Object.keys(values).filter(x => (requiredFields.includes(x) ? Boolean(values[x]) : true))
-            .length === requiredFields.length;
+          fields.filter(x => (requiredFields.includes(x) ? Boolean(values[x]) : false)).length ===
+          requiredFields.length;
 
         return update(state, {
           errors,
           values,
           pristine,
-          valid: hasErrors && filledRequired,
+          valid: !hasErrors && filledRequired,
         });
       }
 
@@ -118,9 +118,12 @@ function reducerWrapper(
 
         const errors = update(state.errors, { [field]: value });
 
-        const valid = Object.values(errors).filter(x => Boolean(x)).length === 0;
+        const hasErrors = Object.values(errors).filter(x => Boolean(x)).length > 0;
+        const filledRequired =
+          fields.filter(x => (requiredFields.includes(x) ? Boolean(state.values[x]) : false))
+            .length === requiredFields.length;
 
-        return update(state, { errors, valid });
+        return update(state, { errors, valid: !hasErrors && filledRequired });
       }
 
       default:
