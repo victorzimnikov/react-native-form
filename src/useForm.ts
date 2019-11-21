@@ -28,6 +28,7 @@ export interface FormErrorProps {
 export interface InputFormProps<V, E> {
   readonly error?: E;
   readonly fields: string[];
+  readonly requiredFields?: string[];
   readonly initialValues?: Partial<V>;
   readonly onBlur?: (values: V) => void;
   readonly onChange?: (values: V) => void;
@@ -71,6 +72,7 @@ function getInitialState(fields: string[], initialValues: object = {}): FormStat
 
 function reducerWrapper(
   fields: string[],
+  requiredFields: string[] = [],
   initialValues: any = {},
   logger?: (data: ActionProps) => void,
 ) {
@@ -94,13 +96,17 @@ function reducerWrapper(
         const values = update(state.values, { [field]: value });
         const pristine = isEqual(values, initialValues);
         const errors = update(state.errors, { [field]: "" });
-        const valid = Object.values(errors).filter(x => Boolean(x)).length === 0;
+
+        const hasErrors = Object.values(errors).filter(x => Boolean(x)).length === 0;
+        const filledRequired =
+          Object.keys(values).filter(x => (requiredFields.includes(x) ? Boolean(values[x]) : true))
+            .length === requiredFields.length;
 
         return update(state, {
-          valid,
           errors,
           values,
           pristine,
+          valid: hasErrors && filledRequired,
         });
       }
 
@@ -130,9 +136,10 @@ export function useForm<V = {}, E = Error>({
   fields = [],
   formatError,
   initialValues,
+  requiredFields,
 }: InputFormProps<V, E>): FormProps<V> {
   const initialState = useMemo(() => getInitialState(fields, initialValues), []);
-  const reducer = useMemo(() => reducerWrapper(fields, initialValues), []);
+  const reducer = useMemo(() => reducerWrapper(fields, requiredFields, initialValues), []);
 
   const [state, dispatch] = useReducer(reducer, initialState);
 
