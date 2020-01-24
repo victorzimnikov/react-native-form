@@ -1,4 +1,4 @@
-import { deepUpdate, update } from "immupdate";
+import { update } from "immupdate";
 import { useEffect, useMemo, useReducer } from "react";
 import { assign, isEmpty, isEqual, isPlainObject } from "lodash";
 
@@ -118,9 +118,22 @@ function reducerWrapper(
           return state;
         }
 
-        return deepUpdate(state)
-          .at("values")
-          .modify(x => update(x, values));
+        const v = update(state.values, values);
+
+        const pristine = isEqual(v, initialValues);
+        const errors = update(state.errors, { [field]: "" });
+
+        const hasErrors = Object.values(errors).filter(x => Boolean(x)).length > 0;
+        const filledRequired =
+          fields.filter(x => (requiredFields.includes(x) ? Boolean(v[x]) : false)).length ===
+          requiredFields.length;
+
+        return update(state, {
+          errors,
+          pristine,
+          values: v,
+          valid: !hasErrors && filledRequired,
+        });
       }
 
       case Actions.Blur:
@@ -184,7 +197,7 @@ export function useForm<V = {}, E = Error>({
   return {
     ...state,
     reset: () => dispatch({ type: Actions.Reset }),
-    changeValues: (values: Partial<V>) => dispatch({ type: Actions.Change, values }),
+    changeValues: (values: Partial<V>) => dispatch({ type: Actions.ChangeValues, values }),
     change: (field: string, value: any) => dispatch({ type: Actions.Change, field, value }),
     blur: (field: string) => {
       const validator = validate && validate[field];
