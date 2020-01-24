@@ -1,6 +1,6 @@
-import { update } from "immupdate";
-import { assign, isEmpty, isEqual } from "lodash";
+import { deepUpdate, update } from "immupdate";
 import { useEffect, useMemo, useReducer } from "react";
+import { assign, isEmpty, isEqual, isPlainObject } from "lodash";
 
 interface Dict<T> {
   readonly [key: string]: T;
@@ -12,10 +12,12 @@ enum Actions {
   Change = "Form/Change",
   SetError = "Form/SetError",
   ClearErrors = "Form/ClearErrors",
+  ChangeValues = "Form/ChangeValues",
 }
 
 export interface ActionProps {
   readonly value?: any;
+  readonly values?: any;
   readonly type: Actions;
   readonly field?: string;
 }
@@ -41,6 +43,7 @@ export interface FormStateProps<V> {
   readonly valid: boolean;
   readonly pristine: boolean;
   readonly errors: Dict<string>;
+  readonly changeValues: (values: V) => void;
 }
 
 export interface FormProps<V> extends FormStateProps<V> {
@@ -49,7 +52,7 @@ export interface FormProps<V> extends FormStateProps<V> {
   readonly change: (field: string, value: any) => void;
 }
 
-const baseFormProps: FormStateProps<any> = {
+const baseFormProps: Partial<FormStateProps<any>> = {
   values: {},
   errors: {},
   valid: true,
@@ -76,9 +79,9 @@ function reducerWrapper(
   initialValues: any = {},
   logger?: (data: ActionProps) => void,
 ) {
-  return (state: any, { type, field, value }: ActionProps) => {
+  return (state: any, { type, field, value, values }: ActionProps) => {
     if (__DEV__ && logger) {
-      logger({ type, field, value });
+      logger({ type, field, value, values });
     }
 
     switch (type) {
@@ -93,21 +96,31 @@ function reducerWrapper(
           return state;
         }
 
-        const values = update(state.values, { [field]: value });
-        const pristine = isEqual(values, initialValues);
+        const v = update(state.values, { [field]: value });
+        const pristine = isEqual(v, initialValues);
         const errors = update(state.errors, { [field]: "" });
 
         const hasErrors = Object.values(errors).filter(x => Boolean(x)).length > 0;
         const filledRequired =
-          fields.filter(x => (requiredFields.includes(x) ? Boolean(values[x]) : false)).length ===
+          fields.filter(x => (requiredFields.includes(x) ? Boolean(v[x]) : false)).length ===
           requiredFields.length;
 
         return update(state, {
           errors,
-          values,
           pristine,
+          values: v,
           valid: !hasErrors && filledRequired,
         });
+      }
+
+      case Actions.ChangeValues: {
+        if (!values || !isPlainObject(values)) {
+          return state;
+        }
+
+        return deepUpdate(state)
+          .at("values")
+          .modify(x => update(x, values));
       }
 
       case Actions.Blur:
@@ -171,6 +184,7 @@ export function useForm<V = {}, E = Error>({
   return {
     ...state,
     reset: () => dispatch({ type: Actions.Reset }),
+    changeValues: (values: Partial<V>) => dispatch({ type: Actions.Change, values }),
     change: (field: string, value: any) => dispatch({ type: Actions.Change, field, value }),
     blur: (field: string) => {
       const validator = validate && validate[field];
