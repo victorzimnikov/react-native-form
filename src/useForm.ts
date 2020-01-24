@@ -43,16 +43,16 @@ export interface FormStateProps<V> {
   readonly valid: boolean;
   readonly pristine: boolean;
   readonly errors: Dict<string>;
-  readonly changeValues: (values: V) => void;
 }
 
 export interface FormProps<V> extends FormStateProps<V> {
   readonly reset: () => void;
   readonly blur: (field: string) => void;
+  readonly changeValues: (values: Partial<V>) => void;
   readonly change: (field: string, value: any) => void;
 }
 
-const baseFormProps: Partial<FormStateProps<any>> = {
+const baseFormProps: FormStateProps<any> = {
   values: {},
   errors: {},
   valid: true,
